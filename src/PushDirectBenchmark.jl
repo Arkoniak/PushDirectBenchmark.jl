@@ -5,8 +5,9 @@ using StatsBase: median
 using DataFrames
 using VegaLite
 using Dates
+using InteractiveUtils
 
-export plot_benchmarks
+export plot_benchmarks, name_helper
 
 function f1(n)
     x = Vector{Int}(undef, n)
@@ -58,16 +59,25 @@ function f6(n)
     x
 end
 
-function plot_benchmarks(; dir = joinpath(@__DIR__, "..", "assets"),
+name_helper(name) = Dates.format(now(), dateformat"yyyymmddTHHMMSS")*name
+
+function plot_benchmarks(; dir = joinpath(@__DIR__, "..", "images"),
         maxn = 200_000,
-        name = Dates.format(now(), dateformat"yyyymmddTHHMMSS")*gethostname())
+        name = name_helper(gethostname()))
 
     maxn = Int(floor(log2(maxn)))
-    paths = Dict{String, String}("comparison" => "push_direct_comparison.png",
+    paths = Dict{String, String}(
+        "version" => "versioninfo.txt",
+        "comparison" => "push_direct_comparison.png",
         "rel_max" => "push_direct_comparison_rel_max.png",
         "rel_min" => "push_direct_comparison_rel_min.png")
-    for (k, v) in names
+
+    for (k, v) in paths
         paths[k] = joinpath(dir, join([name, v], "_"))
+    end
+
+    open(paths["version"], "w") do f
+       versioninfo(f)
     end
 
     df = DataFrame(n = Int[], val = Float64[], type = String[])
