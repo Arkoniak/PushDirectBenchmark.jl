@@ -59,6 +59,21 @@ function f6(n)
     x
 end
 
+# beggars_push
+function f7(n)
+    x = Int[]
+    len = 0
+    for i in 1:n
+        if i > len
+            len = 2*len + 1
+            resize!(x, len)
+        end
+        @inbounds x[i] = i
+    end
+    resize!(x, n)
+    x
+end
+
 name_helper(name) = Dates.format(now(), dateformat"yyyymmddTHHMMSS")*name
 
 function plot_benchmarks(; dir = joinpath(@__DIR__, "..", "images"),
@@ -86,11 +101,13 @@ function plot_benchmarks(; dir = joinpath(@__DIR__, "..", "images"),
         p = @benchmark f2($n)
         h = @benchmark f3($n)
         di = @benchmark f6($n)
+        bp = @benchmark f7($n)
 
         push!(df, (n, median(d.times)/1000, "direct"))
         push!(df, (n, median(p.times)/1000, "push"))
         push!(df, (n, median(h.times)/1000, "push_hint"))
         push!(df, (n, median(di.times)/1000, "direct_inbounds"))
+        push!(df, (n, median(bp.times)/1000, "beggar_push"))
     end
 
     df |> @vlplot(

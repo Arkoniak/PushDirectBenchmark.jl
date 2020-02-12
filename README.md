@@ -56,3 +56,25 @@ Performance relative to minimum benchmark time
 
 Performance relative to maximum benchmark time
 ![arkoniak_ubuntu_vm_comparison_rel_max](images/20200205T134146arkoniak_ubuntu_vm_push_direct_comparison_rel_max.png)
+
+### Arkoniak home laptop
+
+```julia
+Julia Version 1.3.0
+Commit 46ce4d7933 (2019-11-26 06:09 UTC)
+Platform Info:
+  OS: Linux (x86_64-pc-linux-gnu)
+  CPU: Intel(R) Core(TM) i7-7700HQ CPU @ 2.80GHz
+  WORD_SIZE: 64
+  LIBM: libopenlibm
+  LLVM: libLLVM-6.0.1 (ORCJIT, skylake)
+```
+
+Performance
+![arkoniak_home_laptop_comparison](images/20200212T211955_h1_push_direct_comparison.png)
+
+Performance relative to minimum benchmark time
+![arkoniak_home_laptop_comparison_rel_min](images/20200212T211955_h1_push_direct_comparison_rel_min.png)
+
+Performance relative to maximum benchmark time
+![arkoniak_home_laptop_comparison_rel_max](images/20200212T211955_h1_push_direct_comparison_rel_max.png)
