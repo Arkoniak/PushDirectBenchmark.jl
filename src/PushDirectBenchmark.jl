@@ -9,7 +9,7 @@ using InteractiveUtils
 
 export plot_benchmarks, name_helper
 
-test_cases = Vector{Tuple{String, Function}}()
+const test_cases = Vector{Tuple{String, Function}}()
 
 function register_test_case(f::Function, title::String; ignore = false)
     if !ignore
@@ -17,55 +17,7 @@ function register_test_case(f::Function, title::String; ignore = false)
     end
 end
 
-register_test_case("direct") do n
-    x = Vector{Int}(undef, n)
-    for i in 1:n
-        x[i] = i
-    end
-    x
-end
-
-register_test_case("push_hint") do n
-    x = Int[]
-    for i in 1:n
-        push!(x, i)
-    end
-    x
-end
-
-register_test_case("push") do n
-    x = Int[]
-    sizehint!(x, n)
-    for i in 1:n
-        push!(x, i)
-    end
-    x
-end
-
-register_test_case("f4", ignore = true) do n
-    x = Int[]
-    sizehint!(x, n)
-    for i in 1:n
-        x[i] = i
-    end
-    x
-end
-
-register_test_case("f5", ignore = true) do n
-    x = Vector{Int}(undef, n)
-    for i in 1:n
-        push!(x, i)
-    end
-    x
-end
-
-register_test_case("direct_inbounds") do n
-    x = Vector{Int}(undef, n)
-    for i in 1:n
-        @inbounds x[i] = i
-    end
-    x
-end
+include("./testcases.jl")
 
 name_helper(name) = Dates.format(now(), dateformat"yyyymmddTHHMMSS_")*name
 
