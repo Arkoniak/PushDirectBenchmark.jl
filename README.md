@@ -15,7 +15,7 @@ julia> ] dev https://github.com/Arkoniak/PushDirectBenchmark.jl.git
 ```
 Usage
 ```julia
-plot_benchmarks()
+using PushDirectBenchmark; plot_benchmarks()
 ```
 will create files in `image` folder with Julia version info and benchmark plots. Include this plots in this README file in the same manner as it's done below.
 
