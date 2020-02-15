@@ -53,3 +53,17 @@ register_test_case("direct_inbounds") do n
     end
     x
 end
+
+register_test_case("beggar_push") do n
+    local x = Int[]
+    local len = 0
+    for i in 1:n
+        if i > len
+            len = 2*len + 1
+            resize!(x, len)
+        end
+        @inbounds x[i] = i
+    end
+    resize!(x, n)
+    x
+end
