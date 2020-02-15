@@ -9,7 +9,15 @@ using InteractiveUtils
 
 export plot_benchmarks, name_helper
 
-function f1(n)
+test_cases = Vector{Tuple{String, Function}}()
+
+function register_test_case(f::Function, title::String; ignore = false)
+    if !ignore
+        push!(test_cases, (title, f))
+    end
+end
+
+register_test_case("direct") do n
     x = Vector{Int}(undef, n)
     for i in 1:n
         x[i] = i
@@ -17,7 +25,7 @@ function f1(n)
     x
 end
 
-function f2(n)
+register_test_case("push_hint") do n
     x = Int[]
     for i in 1:n
         push!(x, i)
@@ -25,7 +33,7 @@ function f2(n)
     x
 end
 
-function f3(n)
+register_test_case("push") do n
     x = Int[]
     sizehint!(x, n)
     for i in 1:n
@@ -34,7 +42,7 @@ function f3(n)
     x
 end
 
-function f4(n)
+register_test_case("f4", ignore = true) do n
     x = Int[]
     sizehint!(x, n)
     for i in 1:n
@@ -43,7 +51,7 @@ function f4(n)
     x
 end
 
-function f5(n)
+register_test_case("f5", ignore = true) do n
     x = Vector{Int}(undef, n)
     for i in 1:n
         push!(x, i)
@@ -51,7 +59,7 @@ function f5(n)
     x
 end
 
-function f6(n)
+register_test_case("direct_inbounds") do n
     x = Vector{Int}(undef, n)
     for i in 1:n
         @inbounds x[i] = i
@@ -59,7 +67,7 @@ function f6(n)
     x
 end
 
-name_helper(name) = Dates.format(now(), dateformat"yyyymmddTHHMMSS")*name
+name_helper(name) = Dates.format(now(), dateformat"yyyymmddTHHMMSS_")*name
 
 function plot_benchmarks(; dir = joinpath(@__DIR__, "..", "images"),
         maxn = 200_000,
@@ -82,15 +90,13 @@ function plot_benchmarks(; dir = joinpath(@__DIR__, "..", "images"),
 
     df = DataFrame(n = Int[], val = Float64[], type = String[])
     for n in 2 .^ collect(0:maxn)
-        d = @benchmark f1($n)
-        p = @benchmark f2($n)
-        h = @benchmark f3($n)
-        di = @benchmark f6($n)
-
-        push!(df, (n, median(d.times)/1000, "direct"))
-        push!(df, (n, median(p.times)/1000, "push"))
-        push!(df, (n, median(h.times)/1000, "push_hint"))
-        push!(df, (n, median(di.times)/1000, "direct_inbounds"))
+        for tc in test_cases
+            local title = first(tc)
+            local func = last(tc)
+            @info "Benchmarking: $title($n)"
+            local b = @benchmark $func($n)
+            push!(df, (n, median(b.times)/1000, title))
+        end
     end
 
     df |> @vlplot(
