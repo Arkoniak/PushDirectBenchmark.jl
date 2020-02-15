@@ -9,72 +9,25 @@ using InteractiveUtils
 
 export plot_benchmarks, name_helper
 
-function f1(n)
-    x = Vector{Int}(undef, n)
-    for i in 1:n
-        x[i] = i
+const test_cases = Vector{Tuple{String, Function}}()
+
+function register_test_case(f::Function, title::String; ignore = false)
+    if !ignore
+        push!(test_cases, (title, f))
     end
-    x
 end
 
-function f2(n)
-    x = Int[]
-    for i in 1:n
-        push!(x, i)
-    end
-    x
+function run_test_case(index::Int64, n::Integer)
+    local tc = test_cases[index]
+    @info "Run: $(first(tc))($n)"
+    last(tc)(n)
 end
+get_test_cases_count() = length(test_cases)
+export run_test_case, get_test_cases_count
 
-function f3(n)
-    x = Int[]
-    sizehint!(x, n)
-    for i in 1:n
-        push!(x, i)
-    end
-    x
-end
+include("./testcases.jl")
 
-function f4(n)
-    x = Int[]
-    sizehint!(x, n)
-    for i in 1:n
-        x[i] = i
-    end
-    x
-end
-
-function f5(n)
-    x = Vector{Int}(undef, n)
-    for i in 1:n
-        push!(x, i)
-    end
-    x
-end
-
-function f6(n)
-    x = Vector{Int}(undef, n)
-    for i in 1:n
-        @inbounds x[i] = i
-    end
-    x
-end
-
-# beggars_push
-function f7(n)
-    x = Int[]
-    len = 0
-    for i in 1:n
-        if i > len
-            len = 2*len + 1
-            resize!(x, len)
-        end
-        @inbounds x[i] = i
-    end
-    resize!(x, n)
-    x
-end
-
-name_helper(name) = Dates.format(now(), dateformat"yyyymmddTHHMMSS")*name
+name_helper(name) = Dates.format(now(), dateformat"yyyymmddTHHMMSS_")*name
 
 function plot_benchmarks(; dir = joinpath(@__DIR__, "..", "images"),
         maxn = 200_000,
@@ -97,17 +50,13 @@ function plot_benchmarks(; dir = joinpath(@__DIR__, "..", "images"),
 
     df = DataFrame(n = Int[], val = Float64[], type = String[])
     for n in 2 .^ collect(0:maxn)
-        d = @benchmark f1($n)
-        p = @benchmark f2($n)
-        h = @benchmark f3($n)
-        di = @benchmark f6($n)
-        bp = @benchmark f7($n)
-
-        push!(df, (n, median(d.times)/1000, "direct"))
-        push!(df, (n, median(p.times)/1000, "push"))
-        push!(df, (n, median(h.times)/1000, "push_hint"))
-        push!(df, (n, median(di.times)/1000, "direct_inbounds"))
-        push!(df, (n, median(bp.times)/1000, "beggar_push"))
+        for tc in test_cases
+            local title = first(tc)
+            local func = last(tc)
+            @info "Benchmarking: $title($n)"
+            local b = @benchmark $func($n)
+            push!(df, (n, median(b.times)/1000, title))
+        end
     end
 
     df |> @vlplot(
@@ -121,11 +70,16 @@ function plot_benchmarks(; dir = joinpath(@__DIR__, "..", "images"),
     ) |> x -> save(paths["comparison"], x)
 
     df2 = by(df, :n) do d
-        DataFrame(val = d[:val], type = d[:type], val_max = maximum(d[:val]), val_min = minimum(d[:val]))
+        DataFrame(
+            val = d[!, :val],
+            type = d[!, :type],
+            val_max = maximum(d[!, :val]),
+            val_min = minimum(d[!, :val])
+        )
     end
 
-    df2[:rel_max] = df2[:val] ./ df2[:val_max]
-    df2[:rel_min] = df2[:val] ./ df2[:val_min]
+    df2[!, :rel_max] = df2[!, :val] ./ df2[!, :val_max]
+    df2[!, :rel_min] = df2[!, :val] ./ df2[!, :val_min]
 
     df2 |> @vlplot(
         :line,
