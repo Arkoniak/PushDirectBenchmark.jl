@@ -104,11 +104,16 @@ function plot_benchmarks(; dir = joinpath(@__DIR__, "..", "images"),
     ) |> x -> save(paths["comparison"], x)
 
     df2 = by(df, :n) do d
-        DataFrame(val = d[:val], type = d[:type], val_max = maximum(d[:val]), val_min = minimum(d[:val]))
+        DataFrame(
+            val = d[!, :val],
+            type = d[!, :type],
+            val_max = maximum(d[!, :val]),
+            val_min = minimum(d[!, :val])
+        )
     end
 
-    df2[:rel_max] = df2[:val] ./ df2[:val_max]
-    df2[:rel_min] = df2[:val] ./ df2[:val_min]
+    df2[!, :rel_max] = df2[!, :val] ./ df2[!, :val_max]
+    df2[!, :rel_min] = df2[!, :val] ./ df2[!, :val_min]
 
     df2 |> @vlplot(
         :line,
