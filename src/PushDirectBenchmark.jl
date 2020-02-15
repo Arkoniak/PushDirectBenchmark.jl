@@ -17,6 +17,14 @@ function register_test_case(f::Function, title::String; ignore = false)
     end
 end
 
+function run_test_case(index::Int64, n::Integer)
+    local tc = test_cases[index]
+    @info "Run: $(first(tc))($n)"
+    last(tc)(n)
+end
+get_test_cases_count() = length(test_cases)
+export run_test_case, get_test_cases_count
+
 include("./testcases.jl")
 
 name_helper(name) = Dates.format(now(), dateformat"yyyymmddTHHMMSS_")*name
